@@ -188,29 +188,21 @@ function App() {
           </div>
 
           {/* Carousel Card */}
-          <div className="bg-[#f0efeb] p-6 rounded-2xl relative overflow-hidden">
-            <SnowDrift className="bg-white/50" />
-            <div className="flex justify-between items-start mb-10 relative z-10">
-               <span className="text-xs font-bold text-gray-500">1 of 5</span>
-               <div className="flex gap-2">
-                 <button className="p-1 rounded-full bg-black/5 hover:bg-black/10">
-                   <ChevronLeft className="w-4 h-4 text-gray-500" />
-                 </button>
-                 <button className="p-1 rounded-full bg-black/5 hover:bg-black/10">
-                   <ChevronRight className="w-4 h-4 text-gray-500" />
-                 </button>
-               </div>
-            </div>
-            <h3 className="font-bold text-lg mb-2">iPhone, Mac, or both</h3>
-            <p className="text-xs text-gray-600 leading-relaxed mb-6">
-              Keep going! Move $100,000+ by January 1 to qualify. T&Cs apply.
+          <div className="bg-[#f0efeb] p-6 rounded-2xl relative overflow-hidden flex flex-col items-center text-center">
+            {/* Background Decoration */}
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-blue-50 to-transparent opacity-50" />
+            
+            <h3 className="font-bold text-lg mb-2 relative z-10 mt-2">Paper Trading Competition</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-6 relative z-10">
+              Test your skills risk-free this holiday season. Top traders win exclusive prizes!
             </p>
-            <div className="flex items-center justify-between">
-               <button className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-black">
-                 <ArrowRight className="w-4 h-4" />
+            <div className="flex gap-3 relative z-10 w-full">
+               <button className="flex-1 py-2.5 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-black transition-colors">
+                 Join
                </button>
-               {/* Mock Image Placeholder */}
-               <div className="w-20 h-24 bg-gradient-to-tr from-purple-200 to-pink-200 rounded-lg shadow-sm border border-white/50 rotate-3"></div>
+               <button className="flex-1 py-2.5 bg-white text-gray-900 border border-gray-200 rounded-full font-bold text-sm hover:bg-gray-50 transition-colors">
+                 Leaderboard
+               </button>
             </div>
           </div>
 
