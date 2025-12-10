@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Search, Gift, User, ChevronDown, BarChart2, Ghost } from 'lucide-react';
-import { askFinancialAdvisor } from '../services/geminiService';
 import { ChristmasLights } from './ChristmasDecorations';
 
 interface HeaderProps {
@@ -11,20 +10,17 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ isPaperTrading, onTogglePaperTrading, onShowOnboarding }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu);
   };
 
-  const handleSearch = async (e: React.KeyboardEvent) => {
+  const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
-      setIsSearching(true);
-      const answer = await askFinancialAdvisor(searchQuery);
-      setSearchResult(answer);
-      setIsSearching(false);
+      // Basic search functionality - could be expanded later
+      console.log('Searching for:', searchQuery);
+      // You could implement stock search or other features here
     }
   };
 
@@ -144,39 +140,6 @@ const Header: React.FC<HeaderProps> = ({ isPaperTrading, onTogglePaperTrading, o
           </div>
         </div>
       </header>
-
-      {/* AI Search Result Modal */}
-      {searchResult && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <span className="bg-blue-100 text-blue-600 p-1 rounded">AI</span> Insight
-              </h3>
-              <button onClick={() => setSearchResult(null)} className="text-gray-400 hover:text-gray-600">
-                <ChevronDown className="w-5 h-5 rotate-180" />
-              </button>
-            </div>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              {searchResult}
-            </p>
-            <div className="flex justify-end">
-              <button 
-                onClick={() => setSearchResult(null)}
-                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {isSearching && (
-        <div className="fixed top-20 right-1/2 translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm shadow-lg z-50 animate-pulse">
-          Thinking...
-        </div>
-      )}
     </>
   );
 };
