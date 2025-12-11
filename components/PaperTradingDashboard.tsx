@@ -3,6 +3,7 @@ import PortfolioChart from './PortfolioChart';
 import StockDetailView from './StockDetailView';
 import TradeModal from './TradeModal';
 import Leaderboard, { getCurrentUserRank } from './leaderboard';
+import TenDaysChallenge from './TenDaysChallenge';
 import { 
   Eye, 
   EyeOff, 
@@ -74,6 +75,71 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [userLeaderboardRank, setUserLeaderboardRank] = useState<number | null>(null);
+
+  // 10 Days Challenge state
+  const [completedDays, setCompletedDays] = useState<number[]>(() => {
+    const saved = localStorage.getItem('completedChallengeDays');
+    return saved ? JSON.parse(saved) : [1]; // Day 1 is complete when they join
+  });
+  
+  const [currentChallengeDay, setCurrentChallengeDay] = useState(() => {
+    // Calculate which day of the challenge we're on based on when they started
+    const startDate = localStorage.getItem('challengeStartDate');
+    if (!startDate) {
+      localStorage.setItem('challengeStartDate', new Date().toISOString());
+      return 1;
+    }
+    const daysSinceStart = Math.floor((Date.now() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.min(daysSinceStart + 1, 10);
+  });
+
+  // Check and update challenge progress
+  useEffect(() => {
+    const checkChallengeProgress = () => {
+      const newCompleted = [...completedDays];
+      
+      // Day 1: Account created (auto-complete)
+      if (!newCompleted.includes(1)) newCompleted.push(1);
+      
+      // Day 3: First stock purchase
+      if (portfolio.holdings.length > 0 && !newCompleted.includes(3)) {
+        newCompleted.push(3);
+      }
+      
+      // Day 4: 3+ different stocks
+      if (portfolio.holdings.length >= 3 && !newCompleted.includes(4)) {
+        newCompleted.push(4);
+      }
+      
+      // Day 5: 2% growth
+      const growthPercent = ((totalValue - INITIAL_BALANCE) / INITIAL_BALANCE) * 100;
+      if (growthPercent >= 2 && !newCompleted.includes(5)) {
+        newCompleted.push(5);
+      }
+      
+      // Day 8: $2000+ cash reserves
+      if (portfolio.cash >= 2000 && !newCompleted.includes(8)) {
+        newCompleted.push(8);
+      }
+      
+      // Day 9: 5+ trades
+      if (portfolio.trades.length >= 5 && !newCompleted.includes(9)) {
+        newCompleted.push(9);
+      }
+      
+      // Day 10: Portfolio above $10,500
+      if (totalValue >= 10500 && !newCompleted.includes(10)) {
+        newCompleted.push(10);
+      }
+      
+      if (newCompleted.length !== completedDays.length) {
+        setCompletedDays(newCompleted);
+        localStorage.setItem('completedChallengeDays', JSON.stringify(newCompleted));
+      }
+    };
+    
+    checkChallengeProgress();
+  }, [portfolio, totalValue, completedDays]);
 
   // Persist portfolio changes
   useEffect(() => {
@@ -258,6 +324,13 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
         optionContract={tradeModalData?.optionContract}
         paperBalance={portfolio.cash}
         onExecuteTrade={handleExecuteTrade}
+      />
+
+      {/* 10 Days of Paper Trading Challenge */}
+      <TenDaysChallenge 
+        onSelectDay={(day) => console.log('Selected day:', day)}
+        completedDays={completedDays}
+        currentDay={currentChallengeDay}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
