@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PortfolioChart from './PortfolioChart';
 import Leaderboard from './leaderboard';
 import { 
   Eye, 
   EyeOff, 
   ChevronDown, 
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { ChartDataPoint, Holding, TimeRange } from '../types';
 import { MiniSantaHat } from './ChristmasDecorations';
+
+const adScreenshots = [
+  '/slide-1.png',
+  '/slide-2.png',
+  '/slide-3.png',
+  '/slide-4.png',
+  '/slide-5.png',
+  '/slide-6.png',
+  '/slide-7.png',
+  '/slide-8.png',
+  '/slide-9.png',
+  '/slide-10.png',
+];
 
 // --- MOCK DATA ---
 // We can move mock data out if needed, but for now keeping it here or passing it in is fine. 
@@ -41,6 +56,15 @@ const RegularDashboard: React.FC<RegularDashboardProps> = ({
   timeRanges
 }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % adScreenshots.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   if (showLeaderboard) {
     return <Leaderboard onClose={() => setShowLeaderboard(false)} />;
@@ -185,13 +209,57 @@ const RegularDashboard: React.FC<RegularDashboardProps> = ({
 
           {/* Paper Trading Ad Card - Prominent for new users */}
           {!hasJoinedPaperTrading && (
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 p-6 rounded-2xl relative overflow-hidden flex flex-col items-center text-center shadow-lg">
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 p-5 rounded-2xl relative overflow-hidden flex flex-col items-center text-center shadow-lg">
               <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-100 to-transparent opacity-50" />
               <div className="relative z-10 w-full">
-                <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="flex items-center justify-center gap-2 mb-3">
                   <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded-full">NEW</span>
                   <h3 className="font-bold text-lg">Paper Trading Competition</h3>
                 </div>
+                
+                {/* Screenshot Carousel */}
+                <div className="relative mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 shadow-md border border-gray-200 mx-auto" style={{ maxWidth: '280px' }}>
+                  <div className="relative h-96 overflow-hidden">
+                    {adScreenshots.map((src, idx) => (
+                      <img
+                        key={idx}
+                        src={src}
+                        alt={`Feature preview ${idx + 1}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                          idx === currentSlide ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Carousel Controls */}
+                  <button 
+                    onClick={() => setCurrentSlide((prev) => (prev - 1 + adScreenshots.length) % adScreenshots.length)}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 p-1 bg-white/80 rounded-full shadow hover:bg-white transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-gray-700" />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentSlide((prev) => (prev + 1) % adScreenshots.length)}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1 bg-white/80 rounded-full shadow hover:bg-white transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4 text-gray-700" />
+                  </button>
+                  
+                  {/* Dots */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    {adScreenshots.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlide(idx)}
+                        className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                          idx === currentSlide ? 'bg-gray-900' : 'bg-gray-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
                 <p className="text-sm text-gray-700 leading-relaxed mb-4 font-medium">
                   🎁 Test your skills risk-free! Top traders win exclusive prizes!
                 </p>
