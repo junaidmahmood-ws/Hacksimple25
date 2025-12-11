@@ -105,3 +105,10 @@ export interface DailyPrize {
   description?: string;
   amount?: string;
 }
+
+// Auth types
+export interface AuthUser {
+  id: string;
+  username: string;
+  created_at?: string;
+}

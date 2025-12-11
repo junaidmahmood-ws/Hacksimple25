@@ -1,22 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Gift, User, ChevronDown, BarChart2, Ghost, TrendingUp, Loader2, X } from 'lucide-react';
+import { Search, Gift, User, ChevronDown, BarChart2, Ghost, TrendingUp, Loader2, X, LogIn } from 'lucide-react';
 import { ChristmasLights } from './ChristmasDecorations';
 import { searchTickers, Ticker } from '../services/massiveApi';
+import type { User as AuthUser } from '../services/authService';
 
 interface HeaderProps {
   isPaperTrading?: boolean;
   onTogglePaperTrading?: (enabled: boolean) => void;
   onShowOnboarding?: () => void;
   onSelectStock?: (ticker: Ticker) => void;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
+  onShowLogin?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isPaperTrading, onTogglePaperTrading, onShowOnboarding, onSelectStock }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  isPaperTrading, 
+  onTogglePaperTrading, 
+  onShowOnboarding, 
+  onSelectStock,
+  currentUser,
+  onLogout,
+  onShowLogin
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Ticker[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   // Handle click outside to close search dropdown
@@ -24,6 +37,9 @@ const Header: React.FC<HeaderProps> = ({ isPaperTrading, onTogglePaperTrading, o
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearchResults(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -202,58 +218,79 @@ const Header: React.FC<HeaderProps> = ({ isPaperTrading, onTogglePaperTrading, o
             <Gift className="w-5 h-5" />
           </button>
           
-          <div className="relative">
-            <button 
-              onClick={toggleProfileMenu}
-              className="flex items-center gap-1 p-1 pr-2 text-gray-500 hover:bg-gray-100 rounded-full border border-gray-200/50"
-            >
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600" />
-              </div>
-              <ChevronDown className={`w-3 h-3 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Profile Menu Dropdown */}
-            {showProfileMenu && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-3 border-b border-gray-50 mb-1">
-                  <div className="font-bold text-gray-900">John Doe</div>
-                  <div className="text-xs text-gray-500">john.doe@example.com</div>
+          {/* User Profile / Login */}
+          {currentUser ? (
+            <div ref={profileRef} className="relative">
+              <button 
+                onClick={toggleProfileMenu}
+                className="flex items-center gap-1 p-1 pr-2 text-gray-500 hover:bg-gray-100 rounded-full border border-gray-200/50"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">
+                    {currentUser.username.slice(0, 2).toUpperCase()}
+                  </span>
                 </div>
-                
-                <div className="p-2">
-                   <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer" onClick={(e) => {
-                      e.stopPropagation();
-                      if (isPaperTrading && onTogglePaperTrading) {
-                        onTogglePaperTrading(false);
-                      } else if (!isPaperTrading && onShowOnboarding) {
-                        onShowOnboarding();
+                <ChevronDown className={`w-3 h-3 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Profile Menu Dropdown */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-3 border-b border-gray-50 mb-1">
+                    <div className="font-bold text-gray-900">{currentUser.username}</div>
+                    <div className="text-xs text-gray-500">Paper Trading Account</div>
+                  </div>
+                  
+                  <div className="p-2">
+                     <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer" onClick={(e) => {
+                        e.stopPropagation();
+                        if (isPaperTrading && onTogglePaperTrading) {
+                          onTogglePaperTrading(false);
+                        } else if (!isPaperTrading && onShowOnboarding) {
+                          onShowOnboarding();
+                          setShowProfileMenu(false);
+                        }
+                     }}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isPaperTrading ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-500'}`}>
+                             {isPaperTrading ? <Ghost className="w-4 h-4" /> : <BarChart2 className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-gray-900">Paper Trading</div>
+                            <div className="text-[10px] text-gray-500">{isPaperTrading ? 'Active' : 'Off'}</div>
+                          </div>
+                        </div>
+                        <div className={`w-10 h-5 rounded-full relative transition-colors ${isPaperTrading ? 'bg-yellow-400' : 'bg-gray-200'}`}>
+                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${isPaperTrading ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="mt-1 pt-1 border-t border-gray-50">
+                    <button 
+                      onClick={() => {
+                        if (onLogout) {
+                          onLogout();
+                        }
                         setShowProfileMenu(false);
-                      }
-                   }}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isPaperTrading ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-500'}`}>
-                           {isPaperTrading ? <Ghost className="w-4 h-4" /> : <BarChart2 className="w-4 h-4" />}
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-gray-900">Paper Trading</div>
-                          <div className="text-[10px] text-gray-500">{isPaperTrading ? 'Active' : 'Off'}</div>
-                        </div>
-                      </div>
-                      <div className={`w-10 h-5 rounded-full relative transition-colors ${isPaperTrading ? 'bg-yellow-400' : 'bg-gray-200'}`}>
-                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${isPaperTrading ? 'translate-x-5' : 'translate-x-0'}`} />
-                      </div>
-                   </div>
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      Log out
+                    </button>
+                  </div>
                 </div>
-
-                <div className="mt-1 pt-1 border-t border-gray-50">
-                  <button className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg">
-                    Log out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              onClick={onShowLogin}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors"
+            >
+              <LogIn className="w-4 h-4" />
+              Log in
+            </button>
+          )}
         </div>
       </header>
       <ChristmasLights />

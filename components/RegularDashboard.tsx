@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PortfolioChart from './PortfolioChart';
+import Leaderboard from './leaderboard';
 import { 
   Eye, 
   EyeOff, 
@@ -26,6 +27,7 @@ interface RegularDashboardProps {
   setShowOnboarding: () => void;
   holdings: Holding[];
   timeRanges: TimeRange[];
+  isLoggedIn?: boolean;
 }
 
 const RegularDashboard: React.FC<RegularDashboardProps> = ({
@@ -38,6 +40,12 @@ const RegularDashboard: React.FC<RegularDashboardProps> = ({
   holdings,
   timeRanges
 }) => {
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+  if (showLeaderboard) {
+    return <Leaderboard onClose={() => setShowLeaderboard(false)} />;
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* LEFT COLUMN (Main Content) */}
@@ -175,24 +183,32 @@ const RegularDashboard: React.FC<RegularDashboardProps> = ({
             </div>
           </div>
 
-          {/* Paper Trading Ad Card */}
+          {/* Paper Trading Ad Card - Prominent for new users */}
           {!hasJoinedPaperTrading && (
-            <div className="bg-[#f0efeb] p-6 rounded-2xl relative overflow-hidden flex flex-col items-center text-center">
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-blue-50 to-transparent opacity-50" />
-              <h3 className="font-bold text-lg mb-2 relative z-10 mt-2">Paper Trading Competition</h3>
-              <p className="text-xs text-gray-600 leading-relaxed mb-6 relative z-10">
-                Test your skills risk-free this holiday season. Top traders win exclusive prizes!
-              </p>
-              <div className="flex gap-3 relative z-10 w-full">
-                 <button 
-                   onClick={() => setShowOnboarding()}
-                   className="flex-1 py-2.5 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-black transition-colors"
-                 >
-                   Join
-                 </button>
-                 <button className="flex-1 py-2.5 bg-white text-gray-900 border border-gray-200 rounded-full font-bold text-sm hover:bg-gray-50 transition-colors">
-                   Leaderboard
-                 </button>
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 p-6 rounded-2xl relative overflow-hidden flex flex-col items-center text-center shadow-lg">
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-100 to-transparent opacity-50" />
+              <div className="relative z-10 w-full">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded-full">NEW</span>
+                  <h3 className="font-bold text-lg">Paper Trading Competition</h3>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-4 font-medium">
+                  🎁 Test your skills risk-free! Top traders win exclusive prizes!
+                </p>
+                <div className="flex gap-3 w-full">
+                   <button 
+                     onClick={() => setShowOnboarding()}
+                     className="flex-1 py-3 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-black transition-all hover:scale-105 shadow-md"
+                   >
+                     Join Competition
+                   </button>
+                   <button 
+                     onClick={() => setShowLeaderboard(true)}
+                     className="flex-1 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-full font-bold text-sm hover:bg-gray-50 transition-colors"
+                   >
+                     View Leaderboard
+                   </button>
+                </div>
               </div>
             </div>
           )}

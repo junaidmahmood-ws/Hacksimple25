@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import { Snowflakes } from './components/ChristmasDecorations';
 import PaperTradingOnboarding from './components/PaperTradingOnboarding';
+import LoginPage from './components/LoginPage';
 import { Holding, TimeRange } from './types';
 import { Ticker } from './services/massiveApi';
+import { getCurrentUser, logout, User } from './services/authService';
+import { initializePaperTradingAccount } from './services/paperTradingService';
 
 import RegularDashboard from './components/RegularDashboard';
 import PaperTradingDashboard from './components/PaperTradingDashboard';
@@ -28,6 +31,10 @@ function App() {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('ALL');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [headerSearchTicker, setHeaderSearchTicker] = useState<Ticker | null>(null);
+  const [showLoginPage, setShowLoginPage] = useState(false);
+  
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getCurrentUser());
   
   // Persisted state
   const [isPaperTrading, setIsPaperTrading] = useState(() => {
@@ -60,11 +67,52 @@ function App() {
     }
   }, [skillLevel]);
 
-  const handleStartPaperTrading = (userSkillLevel: 'student' | 'advanced') => {
+  const handleStartPaperTrading = async (userSkillLevel: 'student' | 'advanced') => {
+    // Initialize paper trading account in Supabase
+    if (currentUser && currentUser.username) {
+      const category = userSkillLevel === 'student' ? 'Student' : 'Advanced';
+      await initializePaperTradingAccount(currentUser.username, category);
+    }
+    
     setIsPaperTrading(true);
     setHasJoinedPaperTrading(true);
     setSkillLevel(userSkillLevel);
     setShowOnboarding(false);
+  };
+
+  // Handle showing onboarding - check if logged in first
+  const handleShowOnboarding = () => {
+    if (!currentUser) {
+      // Not logged in - show login page first
+      setShowLoginPage(true);
+    } else if (!hasJoinedPaperTrading) {
+      setShowOnboarding(true);
+    } else {
+      setIsPaperTrading(true);
+    }
+  };
+
+  // Handle login success
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setShowLoginPage(false);
+    // After signup/login, ensure hasJoinedPaperTrading is false for new users
+    // This ensures the Paper Trading card is visible
+    if (!hasJoinedPaperTrading) {
+      // Show onboarding modal after a brief delay to let the page render
+      setTimeout(() => {
+        setShowOnboarding(true);
+      }, 300);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+    setIsPaperTrading(false);
+    // Reset paper trading state on logout so banner shows again
+    setHasJoinedPaperTrading(false);
   };
 
   // Handle stock selection from header search
@@ -73,8 +121,10 @@ function App() {
       // Set the ticker to be passed to PaperTradingDashboard
       setHeaderSearchTicker(ticker);
     } else {
-      // If not in paper trading, show onboarding or switch to paper trading
-      if (hasJoinedPaperTrading) {
+      // If not in paper trading, check if logged in
+      if (!currentUser) {
+        setShowLoginPage(true);
+      } else if (hasJoinedPaperTrading) {
         setIsPaperTrading(true);
         setHeaderSearchTicker(ticker);
       } else {
@@ -88,6 +138,11 @@ function App() {
     setHeaderSearchTicker(null);
   };
 
+  // Show login page if requested
+  if (showLoginPage) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 pb-20 relative overflow-hidden">
       <Snowflakes />
@@ -99,14 +154,11 @@ function App() {
       <Header 
         isPaperTrading={isPaperTrading}
         onTogglePaperTrading={setIsPaperTrading}
-        onShowOnboarding={() => {
-          if (!hasJoinedPaperTrading) {
-            setShowOnboarding(true);
-          } else {
-            setIsPaperTrading(true);
-          }
-        }}
+        onShowOnboarding={handleShowOnboarding}
         onSelectStock={handleHeaderSearch}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onShowLogin={() => setShowLoginPage(true)}
       />
 
       <main className="max-w-[1400px] mx-auto pt-10 px-6 lg:px-12">
@@ -127,8 +179,8 @@ function App() {
             setBalanceVisible={setBalanceVisible}
             selectedRange={selectedRange}
             setSelectedRange={setSelectedRange}
-            hasJoinedPaperTrading={hasJoinedPaperTrading}
-            setShowOnboarding={() => setShowOnboarding(true)}
+            hasJoinedPaperTrading={currentUser ? hasJoinedPaperTrading : false}
+            setShowOnboarding={handleShowOnboarding}
             holdings={holdings}
             timeRanges={timeRanges}
           />

@@ -4,6 +4,7 @@ import { LeaderboardUser } from '../types';
 // Interface matching the actual Supabase column names (with spaces and capitals)
 interface SupabaseUser {
   id: string;
+  username?: string;
   Name?: string;
   name?: string;
   'Percent Gain'?: number;
@@ -110,7 +111,7 @@ USING (true);
       // Handle column names with spaces using bracket notation
       const percentUp = user['Percent Gain'] ?? user.percent_gain ?? 0;
       const moneyUp = user['Amount Gained'] ?? user.amount_gained ?? 0;
-      const userName = user['Name'] ?? user.name ?? 'Unknown';
+      const userName = user.username ?? user['Name'] ?? user.name ?? 'Unknown';
       
       // Generate avatar URL if not provided
       const avatar = user.avatar_url || 

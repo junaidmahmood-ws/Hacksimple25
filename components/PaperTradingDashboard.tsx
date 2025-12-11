@@ -10,11 +10,21 @@ import {
   Ghost,
   Trophy,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Loader2
 } from 'lucide-react';
 import { MiniSantaHat, SnowDrift } from './ChristmasDecorations';
 import { ChartDataPoint, TimeRange, Holding, PaperTrade, PaperPortfolio } from '../types';
 import { Ticker, OptionContract } from '../services/massiveApi';
+import { getCurrentUser } from '../services/authService';
+import { 
+  getPortfolio, 
+  placeOrder, 
+  resetPaperTradingAccount,
+  getTradeHistory,
+  refreshPortfolioPrices,
+  getPortfolioHistory
+} from '../services/paperTradingService';
 
 interface PaperTradingDashboardProps {
   balanceVisible: boolean;
@@ -47,18 +57,15 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
   initialTicker,
   onTickerConsumed
 }) => {
-  // Load portfolio from localStorage
-  const [portfolio, setPortfolio] = useState<PaperPortfolio>(() => {
-    const saved = localStorage.getItem('paperPortfolio');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      cash: INITIAL_BALANCE,
-      holdings: [],
-      trades: [],
-      totalValue: INITIAL_BALANCE
-    };
+  const currentUser = getCurrentUser();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Portfolio state - synced with Supabase
+  const [portfolio, setPortfolio] = useState<PaperPortfolio>({
+    cash: INITIAL_BALANCE,
+    holdings: [],
+    trades: [],
+    totalValue: INITIAL_BALANCE
   });
 
   // View state
@@ -74,8 +81,78 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [userLeaderboardRank, setUserLeaderboardRank] = useState<number | null>(null);
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
 
-  // Persist portfolio changes
+  // Load portfolio from Supabase on mount and refresh prices
+  useEffect(() => {
+    const loadPortfolioAndRefreshPrices = async () => {
+      if (!currentUser || !currentUser.username) {
+        setIsLoading(false);
+        // Fall back to localStorage if no user
+        const saved = localStorage.getItem('paperPortfolio');
+        if (saved) {
+          try {
+            setPortfolio(JSON.parse(saved));
+          } catch (e) {
+            console.error('Failed to parse saved portfolio:', e);
+          }
+        }
+        return;
+      }
+      
+      try {
+        // First load the portfolio data
+        const portfolioData = await getPortfolio(currentUser.username);
+        if (portfolioData) {
+          setPortfolio(portfolioData);
+        }
+        
+        setIsLoading(false);
+        
+        // Then refresh prices in the background (this may take a while due to rate limiting)
+        setIsRefreshingPrices(true);
+        console.log('Refreshing stock prices...');
+        
+        const refreshResult = await refreshPortfolioPrices(currentUser.username);
+        
+        if (refreshResult.success && refreshResult.updatedPositions) {
+          // Update portfolio with new prices
+          setPortfolio(prev => ({
+            ...prev,
+            holdings: refreshResult.updatedPositions || prev.holdings,
+            totalValue: refreshResult.totalValue ?? prev.totalValue
+          }));
+          console.log('Prices refreshed successfully');
+        }
+        
+        // Load chart data (portfolio history)
+        const history = await getPortfolioHistory(currentUser.username);
+        if (history.length > 0) {
+          setChartData(history);
+        }
+        
+      } catch (error) {
+        console.error('Failed to load portfolio:', error);
+        // Fall back to localStorage if Supabase fails
+        const saved = localStorage.getItem('paperPortfolio');
+        if (saved) {
+          try {
+            setPortfolio(JSON.parse(saved));
+          } catch (e) {
+            console.error('Failed to parse saved portfolio:', e);
+          }
+        }
+      } finally {
+        setIsLoading(false);
+        setIsRefreshingPrices(false);
+      }
+    };
+    
+    loadPortfolioAndRefreshPrices();
+  }, [currentUser?.username]);
+
+  // Also save to localStorage as backup
   useEffect(() => {
     localStorage.setItem('paperPortfolio', JSON.stringify(portfolio));
   }, [portfolio]);
@@ -115,8 +192,32 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     setShowTradeModal(true);
   };
 
-  // Handle executing a trade
-  const handleExecuteTrade = (trade: PaperTrade) => {
+  // Handle executing a trade - save to Supabase
+  const handleExecuteTrade = async (trade: PaperTrade) => {
+    if (!currentUser || !currentUser.username) {
+      console.error('No user logged in or username missing');
+      alert('Please log in to place trades');
+      return;
+    }
+
+    // Place order in Supabase
+    const result = await placeOrder(currentUser.username, {
+      ticker: trade.ticker,
+      name: trade.name,
+      side: trade.action,
+      quantity: trade.quantity,
+      price: trade.price,
+      orderType: trade.type,
+      optionDetails: trade.optionDetails
+    });
+
+    if (!result.success) {
+      console.error('Failed to place order:', result.error);
+      alert(result.error || 'Failed to place order');
+      return;
+    }
+
+    // Update local state optimistically
     setPortfolio(prev => {
       let newCash = prev.cash;
       let newHoldings = [...prev.holdings];
@@ -185,9 +286,12 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     setShowTradeModal(false);
   };
 
-  // Reset portfolio
-  const handleResetPortfolio = () => {
+  // Reset portfolio - also reset in Supabase
+  const handleResetPortfolio = async () => {
     if (confirm('Are you sure you want to reset your paper trading portfolio? This will clear all holdings and trades.')) {
+      if (currentUser && currentUser.username) {
+        await resetPaperTradingAccount(currentUser.username);
+      }
       setPortfolio({
         cash: INITIAL_BALANCE,
         holdings: [],
@@ -269,6 +373,9 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 relative ml-4 flex items-center gap-3">
                <>
                   {balanceVisible ? formatCurrency(totalValue) : '$• • • • • • • •'}
+                  {isRefreshingPrices && (
+                    <Loader2 className="w-5 h-5 animate-spin text-gray-400" title="Refreshing prices..." />
+                  )}
                   <button 
                     onClick={() => setIsPaperTrading(false)}
                     className="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-md border border-yellow-200 cursor-pointer hover:bg-yellow-200 transition-colors"
@@ -301,14 +408,20 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
           {/* Chart Section */}
           <div className="relative">
             <PortfolioChart 
-              data={portfolio.trades.length > 0 
-                ? portfolio.trades.map((t, i) => ({
-                    time: new Date(t.timestamp).toLocaleDateString(),
-                    value: portfolio.trades.slice(0, i + 1).reduce((sum, tr) => 
-                      sum + (tr.action === 'buy' ? -tr.totalValue : tr.totalValue), INITIAL_BALANCE
-                    )
-                  }))
-                : Array.from({ length: 50 }, (_, i) => ({ time: `Day ${i}`, value: INITIAL_BALANCE }))
+              data={chartData.length > 0 
+                ? chartData
+                : portfolio.trades.length > 0 
+                  ? portfolio.trades.map((t, i) => ({
+                      time: new Date(t.timestamp).toLocaleDateString(),
+                      value: portfolio.trades.slice(0, i + 1).reduce((sum, tr) => 
+                        sum + (tr.action === 'buy' ? -tr.totalValue : tr.totalValue), INITIAL_BALANCE
+                      )
+                    }))
+                  : Array.from({ length: 30 }, (_, i) => {
+                      const date = new Date();
+                      date.setDate(date.getDate() - (30 - i));
+                      return { time: date.toISOString().split('T')[0], value: INITIAL_BALANCE };
+                    })
               } 
             />
             
