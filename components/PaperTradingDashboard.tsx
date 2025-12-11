@@ -93,6 +93,35 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     return Math.min(daysSinceStart + 1, 10);
   });
 
+  // Persist portfolio changes
+  useEffect(() => {
+    localStorage.setItem('paperPortfolio', JSON.stringify(portfolio));
+  }, [portfolio]);
+
+  // Fetch user's leaderboard rank
+  useEffect(() => {
+    const fetchRank = async () => {
+      const rank = await getCurrentUserRank('General');
+      setUserLeaderboardRank(rank);
+    };
+    fetchRank();
+  }, []);
+
+  // Handle initial ticker from header search
+  useEffect(() => {
+    if (initialTicker) {
+      setSelectedTicker(initialTicker);
+      if (onTickerConsumed) {
+        onTickerConsumed();
+      }
+    }
+  }, [initialTicker, onTickerConsumed]);
+
+  // Calculate total portfolio value
+  const totalValue = portfolio.cash + portfolio.holdings.reduce((sum, h) => sum + h.value, 0);
+  const totalChange = totalValue - INITIAL_BALANCE;
+  const totalChangePercent = (totalChange / INITIAL_BALANCE) * 100;
+
   // Check and update challenge progress
   useEffect(() => {
     const checkChallengeProgress = () => {
@@ -140,35 +169,6 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     
     checkChallengeProgress();
   }, [portfolio, totalValue, completedDays]);
-
-  // Persist portfolio changes
-  useEffect(() => {
-    localStorage.setItem('paperPortfolio', JSON.stringify(portfolio));
-  }, [portfolio]);
-
-  // Fetch user's leaderboard rank
-  useEffect(() => {
-    const fetchRank = async () => {
-      const rank = await getCurrentUserRank('General');
-      setUserLeaderboardRank(rank);
-    };
-    fetchRank();
-  }, []);
-
-  // Handle initial ticker from header search
-  useEffect(() => {
-    if (initialTicker) {
-      setSelectedTicker(initialTicker);
-      if (onTickerConsumed) {
-        onTickerConsumed();
-      }
-    }
-  }, [initialTicker, onTickerConsumed]);
-
-  // Calculate total portfolio value
-  const totalValue = portfolio.cash + portfolio.holdings.reduce((sum, h) => sum + h.value, 0);
-  const totalChange = totalValue - INITIAL_BALANCE;
-  const totalChangePercent = (totalChange / INITIAL_BALANCE) * 100;
 
   // Handle stock selection from search
   const handleSelectStock = (ticker: Ticker) => {
