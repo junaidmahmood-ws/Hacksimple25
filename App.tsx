@@ -1,39 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import PortfolioChart from './components/PortfolioChart';
-import HoldingRow from './components/HoldingRow';
-import { MiniSantaHat, Snowflakes, SnowDrift } from './components/ChristmasDecorations';
+import { Snowflakes } from './components/ChristmasDecorations';
 import PaperTradingOnboarding from './components/PaperTradingOnboarding';
-import TradeModal from './components/TradeModal';
-import { 
-  Eye, 
-  EyeOff, 
-  X, 
-  ChevronDown, 
-  MoreHorizontal, 
-  Plus, 
-  Repeat, 
-  Home, 
-  ArrowRight,
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Maximize2,
-  Filter,
-  ArrowUpRight,
-  Gift,
-  Ghost
-} from 'lucide-react';
-import { ChartDataPoint, Holding, TimeRange } from './types';
+import { Holding, TimeRange } from './types';
 
 import RegularDashboard from './components/RegularDashboard';
 import PaperTradingDashboard from './components/PaperTradingDashboard';
-
-// --- MOCK DATA --- (Can also be moved to a shared file if needed, but App.tsx holds the holdings data for regular dash for now or pass it)
-const chartData: ChartDataPoint[] = Array.from({ length: 50 }, (_, i) => ({
-  time: `Day ${i}`,
-  value: 10000 + (i * 150) + (Math.random() * 500)
-}));
 
 const holdings: Holding[] = [
   { id: '1', ticker: 'SOFI', shares: 25, value: 675.75, change: 5.00, changePercent: 0.75, iconBg: 'bg-red-600' },
@@ -54,7 +26,6 @@ function App() {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [selectedRange, setSelectedRange] = useState<TimeRange>('ALL');
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showTradeModal, setShowTradeModal] = useState(false);
   
   // Persisted state
   const [isPaperTrading, setIsPaperTrading] = useState(() => {
@@ -102,10 +73,6 @@ function App() {
         onClose={() => setShowOnboarding(false)}
         onComplete={handleStartPaperTrading}
       />
-      <TradeModal 
-        isOpen={showTradeModal} 
-        onClose={() => setShowTradeModal(false)} 
-      />
       <Header 
         isPaperTrading={isPaperTrading}
         onTogglePaperTrading={setIsPaperTrading}
@@ -128,7 +95,6 @@ function App() {
             selectedRange={selectedRange}
             setSelectedRange={setSelectedRange}
             setIsPaperTrading={setIsPaperTrading}
-            setShowTradeModal={setShowTradeModal}
             timeRanges={timeRanges}
           />
         ) : (
