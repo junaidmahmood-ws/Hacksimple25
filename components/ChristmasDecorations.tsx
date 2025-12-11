@@ -22,24 +22,38 @@ export const MiniSantaHat = ({ className = "" }: { className?: string }) => (
 );
 
 export const ChristmasLights = () => (
-  <div className="absolute top-4 left-0 right-0 h-4 flex justify-between overflow-hidden pointer-events-none z-50 px-4">
-    {Array.from({ length: 20 }).map((_, i) => (
+  <div className="w-full h-8 flex justify-around pointer-events-none px-6 z-[100] relative bg-gradient-to-b from-white to-transparent">
+    {/* Wire */}
+    <div className="absolute top-3 left-0 right-0 h-0.5 bg-gray-500" />
+    {Array.from({ length: 25 }).map((_, i) => (
       <div 
         key={i}
-        className={`w-3 h-3 rounded-full shadow-md animate-pulse ${
-          ['bg-red-500', 'bg-green-500', 'bg-yellow-400', 'bg-blue-500'][i % 4]
-        }`}
-        style={{ 
-          marginTop: i % 2 === 0 ? '-5px' : '0px',
-          animationDelay: `${i * 0.1}s`,
-          boxShadow: `0 0 10px ${
-             ['#ef4444', '#22c55e', '#facc15', '#3b82f6'][i % 4]
-          }`
-        }}
-      />
+        className="relative flex flex-col items-center"
+        style={{ animationDelay: `${i * 0.15}s` }}
+      >
+        {/* Wire connector */}
+        <div className="w-0.5 h-2 bg-gray-600" />
+        {/* Light bulb */}
+        <div 
+          className={`w-4 h-5 rounded-full shadow-lg ${
+            ['bg-red-500', 'bg-green-500', 'bg-yellow-400', 'bg-blue-500', 'bg-pink-500'][i % 5]
+          }`}
+          style={{ 
+            boxShadow: `0 0 12px 4px ${
+               ['#ef4444', '#22c55e', '#facc15', '#3b82f6', '#ec4899'][i % 5]
+            }, inset 0 -2px 4px rgba(0,0,0,0.2)`,
+            animation: `twinkle ${1 + (i % 3) * 0.5}s ease-in-out infinite`,
+            animationDelay: `${i * 0.1}s`
+          }}
+        />
+      </div>
     ))}
-    {/* Wire */}
-    <div className="absolute top-0 left-0 right-0 h-px bg-gray-400" style={{ transform: 'translateY(2px)' }}></div>
+    <style>{`
+      @keyframes twinkle {
+        0%, 100% { opacity: 1; filter: brightness(1); }
+        50% { opacity: 0.7; filter: brightness(1.3); }
+      }
+    `}</style>
   </div>
 );
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PortfolioChart from './PortfolioChart';
-import StockSearch from './StockSearch';
 import StockDetailView from './StockDetailView';
 import TradeModal from './TradeModal';
 import Leaderboard, { getCurrentUserRank } from './leaderboard';
@@ -24,6 +23,8 @@ interface PaperTradingDashboardProps {
   setSelectedRange: (range: TimeRange) => void;
   setIsPaperTrading: (isPaper: boolean) => void;
   timeRanges: TimeRange[];
+  initialTicker?: Ticker | null;
+  onTickerConsumed?: () => void;
 }
 
 const INITIAL_BALANCE = 10000;
@@ -42,7 +43,9 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
   selectedRange,
   setSelectedRange,
   setIsPaperTrading,
-  timeRanges
+  timeRanges,
+  initialTicker,
+  onTickerConsumed
 }) => {
   // Load portfolio from localStorage
   const [portfolio, setPortfolio] = useState<PaperPortfolio>(() => {
@@ -85,6 +88,16 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     };
     fetchRank();
   }, []);
+
+  // Handle initial ticker from header search
+  useEffect(() => {
+    if (initialTicker) {
+      setSelectedTicker(initialTicker);
+      if (onTickerConsumed) {
+        onTickerConsumed();
+      }
+    }
+  }, [initialTicker, onTickerConsumed]);
 
   // Calculate total portfolio value
   const totalValue = portfolio.cash + portfolio.holdings.reduce((sum, h) => sum + h.value, 0);
@@ -250,12 +263,6 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* LEFT COLUMN (Main Content) */}
         <div className="lg:col-span-8 flex flex-col gap-8">
-          
-          {/* Search Bar */}
-          <StockSearch 
-            onSelectStock={handleSelectStock}
-            placeholder="Search stocks to trade..."
-          />
           
           {/* Total Balance Header */}
           <div className="flex items-center gap-4 relative">

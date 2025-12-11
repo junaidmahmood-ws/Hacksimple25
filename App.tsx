@@ -3,6 +3,7 @@ import Header from './components/Header';
 import { Snowflakes } from './components/ChristmasDecorations';
 import PaperTradingOnboarding from './components/PaperTradingOnboarding';
 import { Holding, TimeRange } from './types';
+import { Ticker } from './services/massiveApi';
 
 import RegularDashboard from './components/RegularDashboard';
 import PaperTradingDashboard from './components/PaperTradingDashboard';
@@ -26,6 +27,7 @@ function App() {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [selectedRange, setSelectedRange] = useState<TimeRange>('ALL');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [headerSearchTicker, setHeaderSearchTicker] = useState<Ticker | null>(null);
   
   // Persisted state
   const [isPaperTrading, setIsPaperTrading] = useState(() => {
@@ -65,6 +67,27 @@ function App() {
     setShowOnboarding(false);
   };
 
+  // Handle stock selection from header search
+  const handleHeaderSearch = (ticker: Ticker) => {
+    if (isPaperTrading) {
+      // Set the ticker to be passed to PaperTradingDashboard
+      setHeaderSearchTicker(ticker);
+    } else {
+      // If not in paper trading, show onboarding or switch to paper trading
+      if (hasJoinedPaperTrading) {
+        setIsPaperTrading(true);
+        setHeaderSearchTicker(ticker);
+      } else {
+        setShowOnboarding(true);
+      }
+    }
+  };
+
+  // Clear header search ticker after it's been consumed
+  const clearHeaderSearchTicker = () => {
+    setHeaderSearchTicker(null);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 pb-20 relative overflow-hidden">
       <Snowflakes />
@@ -77,14 +100,13 @@ function App() {
         isPaperTrading={isPaperTrading}
         onTogglePaperTrading={setIsPaperTrading}
         onShowOnboarding={() => {
-          // Only show onboarding if user hasn't joined yet
           if (!hasJoinedPaperTrading) {
             setShowOnboarding(true);
           } else {
-            // If they've already joined, just switch to paper trading mode
             setIsPaperTrading(true);
           }
         }}
+        onSelectStock={handleHeaderSearch}
       />
 
       <main className="max-w-[1400px] mx-auto pt-10 px-6 lg:px-12">
@@ -96,6 +118,8 @@ function App() {
             setSelectedRange={setSelectedRange}
             setIsPaperTrading={setIsPaperTrading}
             timeRanges={timeRanges}
+            initialTicker={headerSearchTicker}
+            onTickerConsumed={clearHeaderSearchTicker}
           />
         ) : (
           <RegularDashboard 
