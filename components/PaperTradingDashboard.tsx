@@ -3,13 +3,13 @@ import PortfolioChart from './PortfolioChart';
 import StockSearch from './StockSearch';
 import StockDetailView from './StockDetailView';
 import TradeModal from './TradeModal';
+import Leaderboard, { getCurrentUserRank } from './leaderboard';
 import { 
   Eye, 
   EyeOff, 
   ChevronDown, 
   Ghost,
-  Plus,
-  Repeat,
+  Trophy,
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
@@ -69,10 +69,22 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
     optionContract?: OptionContract;
   } | null>(null);
 
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [userLeaderboardRank, setUserLeaderboardRank] = useState<number | null>(null);
+
   // Persist portfolio changes
   useEffect(() => {
     localStorage.setItem('paperPortfolio', JSON.stringify(portfolio));
   }, [portfolio]);
+
+  // Fetch user's leaderboard rank
+  useEffect(() => {
+    const fetchRank = async () => {
+      const rank = await getCurrentUserRank('General');
+      setUserLeaderboardRank(rank);
+    };
+    fetchRank();
+  }, []);
 
   // Calculate total portfolio value
   const totalValue = portfolio.cash + portfolio.holdings.reduce((sum, h) => sum + h.value, 0);
@@ -154,6 +166,10 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
         totalValue: newCash + newHoldings.reduce((sum, h) => sum + h.value, 0)
       };
     });
+
+    // After placing an order, return to the homepage view
+    setSelectedTicker(null);
+    setShowTradeModal(false);
   };
 
   // Reset portfolio
@@ -211,6 +227,10 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
         />
       </>
     );
+  }
+
+  if (showLeaderboard) {
+    return <Leaderboard onClose={() => setShowLeaderboard(false)} />;
   }
 
   return (
@@ -346,19 +366,17 @@ const PaperTradingDashboard: React.FC<PaperTradingDashboardProps> = ({
           
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow relative overflow-hidden group">
+            <button 
+               onClick={() => setShowLeaderboard(true)}
+               className="col-span-2 flex flex-col items-center justify-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow relative overflow-hidden group"
+            >
                <SnowDrift className="w-full" />
                <div className="w-8 h-8 rounded-full border border-gray-900 flex items-center justify-center relative z-10 group-hover:bg-red-50 transition-colors">
-                 <Plus className="w-4 h-4" />
+                 <Trophy className="w-4 h-4" />
                </div>
-               <span className="text-sm font-bold relative z-10">Add money</span>
-            </button>
-            <button className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow relative overflow-hidden group">
-               <SnowDrift className="w-full" />
-               <div className="w-8 h-8 rounded-full border border-gray-900 flex items-center justify-center relative z-10 group-hover:bg-red-50 transition-colors">
-                 <Repeat className="w-4 h-4" />
-               </div>
-               <span className="text-sm font-bold relative z-10">Transfer money</span>
+               <span className="text-sm font-bold relative z-10">
+                 View leaderboard{userLeaderboardRank ? ` • You’re #${userLeaderboardRank}` : ''}
+               </span>
             </button>
           </div>
 

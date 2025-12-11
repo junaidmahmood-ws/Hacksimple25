@@ -83,3 +83,25 @@ export interface PaperPortfolio {
   trades: PaperTrade[];
   totalValue: number;
 }
+
+// Leaderboard types
+export type LeaderboardViewMode = 'OVERALL' | 'DAILY';
+
+export interface LeaderboardUser {
+  id: string;
+  name: string;
+  percentUp: number;
+  moneyUp: number;
+  rank: number;
+  category: string;
+  avatar: string;
+  isCurrentUser: boolean;
+  trend: 'up' | 'down' | 'same';
+}
+
+export interface DailyPrize {
+  day: string;
+  title?: string;
+  description?: string;
+  amount?: string;
+}
