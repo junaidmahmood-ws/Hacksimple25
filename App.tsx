@@ -96,14 +96,7 @@ function App() {
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     setShowLoginPage(false);
-    // After signup/login, ensure hasJoinedPaperTrading is false for new users
-    // This ensures the Paper Trading card is visible
-    if (!hasJoinedPaperTrading) {
-      // Show onboarding modal after a brief delay to let the page render
-      setTimeout(() => {
-        setShowOnboarding(true);
-      }, 300);
-    }
+    // Don't auto-show onboarding - let user click to start paper trading
   };
 
   // Handle logout
@@ -138,8 +131,8 @@ function App() {
     setHeaderSearchTicker(null);
   };
 
-  // Show login page if requested
-  if (showLoginPage) {
+  // Show login page if not logged in OR if explicitly requested
+  if (!currentUser || showLoginPage) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
