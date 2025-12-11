@@ -115,13 +115,16 @@ const TradeModal: React.FC<TradeModalProps> = ({
       />
 
       {/* Modal Card */}
-      <div className="bg-gray-100 sm:rounded-3xl rounded-t-3xl w-full max-w-md overflow-hidden relative z-10 animate-in slide-in-from-bottom duration-300 flex flex-col max-h-[90vh]">
+      <div className="bg-gray-100 sm:rounded-3xl rounded-t-3xl w-full max-w-md overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
         
-        {/* Success State */}
-        {showSuccess ? (
-          <div className="p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-              <TrendingUp className="w-8 h-8 text-green-600" />
+        {/* Header / Tabs */}
+        <div className="bg-white px-6 pt-6 pb-2 rounded-t-3xl z-20 relative">
+            <button onClick={onClose} className="absolute top-6 left-6 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5 text-black" />
+            </button>
+            
+            <div className="flex justify-center mb-6">
+                <h2 className="font-medium text-[17px] text-black">TSLA</h2>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Placed!</h2>
             <p className="text-gray-500">
@@ -156,99 +159,74 @@ const TradeModal: React.FC<TradeModalProps> = ({
 
               <div className="flex relative">
                 <button 
-                  onClick={() => setActiveTab('buy')}
-                  className={`flex-1 pb-4 text-center font-bold text-sm transition-colors relative ${activeTab === 'buy' ? 'text-green-600' : 'text-gray-400 hover:text-gray-600'}`}
+                    onClick={() => setActiveTab('buy')}
+                    className={`flex-1 pb-4 text-center font-medium text-[14px] transition-colors relative ${activeTab === 'buy' ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  Buy
-                  {activeTab === 'buy' && (
-                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-green-600 rounded-full" />
-                  )}
+                    Buy
+                    {activeTab === 'buy' && (
+                        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full" />
+                    )}
                 </button>
                 <button 
-                  onClick={() => setActiveTab('sell')}
-                  className={`flex-1 pb-4 text-center font-bold text-sm transition-colors relative ${activeTab === 'sell' ? 'text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+                    onClick={() => setActiveTab('sell')}
+                    className={`flex-1 pb-4 text-center font-medium text-[14px] transition-colors relative ${activeTab === 'sell' ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  Sell
-                  {activeTab === 'sell' && (
-                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-600 rounded-full" />
-                  )}
+                    Sell
+                    {activeTab === 'sell' && (
+                        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full" />
+                    )}
                 </button>
               </div>
             </div>
 
-            {/* Current Price Display */}
-            <div className="bg-white px-6 py-3 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Current Price</span>
-                <span className="font-bold text-lg">{formatPrice(price)}</span>
-              </div>
-            </div>
-
-            {/* Form Content */}
-            <div className="p-6 bg-white flex-1 overflow-y-auto">
-              <div className="space-y-6">
+        {/* Form Content */}
+        <div className="p-6 bg-white flex-1 overflow-y-auto">
+            <div className="space-y-5">
                 
                 {/* Order Type */}
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-gray-900">Order type</label>
-                  <button 
-                    onClick={() => setOrderType(orderType === 'market' ? 'limit' : 'market')}
-                    className="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-xl font-bold text-gray-900 hover:bg-gray-200 transition-colors"
-                  >
-                    {orderType === 'market' ? 'Market' : 'Limit'} <ChevronDown className="w-4 h-4" />
-                  </button>
+                    <label className="font-medium text-black text-[15px]">Order type</label>
+                    <button className="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-xl font-medium text-black text-[14px] hover:bg-gray-200 transition-colors">
+                        Market <ChevronDown className="w-4 h-4 text-gray-500" />
+                    </button>
                 </div>
 
                 {/* Buy In */}
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-gray-900">{activeTab === 'buy' ? 'Buy' : 'Sell'} in</label>
-                  <button 
-                    onClick={() => setBuyIn(buyIn === 'dollars' ? 'shares' : 'dollars')}
-                    className="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-xl font-bold text-gray-900 hover:bg-gray-200 transition-colors w-40 justify-between"
-                  >
-                    {buyIn === 'dollars' ? 'Dollars' : 'Shares'} <ArrowUpDown className="w-4 h-4" />
-                  </button>
+                    <label className="font-medium text-black text-[15px]">Buy in</label>
+                    <button className="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-xl font-medium text-black text-[14px] hover:bg-gray-200 transition-colors w-40 justify-between">
+                        Dollars <ArrowUpDown className="w-4 h-4 text-gray-500" />
+                    </button>
                 </div>
 
                 {/* Amount Input */}
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-gray-900">Amount</label>
-                  <div className="relative w-40">
-                    {buyIn === 'dollars' && (
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 font-bold">$</span>
-                    )}
-                    <input 
-                      type="number" 
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className={`w-full ${buyIn === 'dollars' ? 'pl-8' : 'pl-4'} pr-14 py-3 bg-gray-100 rounded-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all text-right`}
-                      min="0"
-                      step={buyIn === 'dollars' ? '1' : '0.0001'}
-                    />
-                    <button 
-                      onClick={() => setAmount(buyIn === 'dollars' ? paperBalance.toString() : (paperBalance / price).toString())}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white rounded-md text-[10px] font-bold shadow-sm hover:bg-gray-50 text-gray-900"
-                    >
-                      Max
-                    </button>
-                  </div>
+                    <label className="font-medium text-black text-[15px]">Amount</label>
+                    <div className="relative w-40">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-black font-medium">$</span>
+                        <input 
+                            type="text" 
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="w-full pl-8 pr-14 py-3 bg-gray-100 rounded-xl font-medium text-black text-[14px] focus:outline-none focus:ring-2 focus:ring-black transition-all text-right"
+                        />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white rounded-md text-[10px] font-medium hover:bg-gray-50 text-black transition-colors">
+                            Max
+                        </button>
+                    </div>
                 </div>
 
                 {/* Estimation */}
                 <div className="flex justify-end">
-                  <span className="text-gray-500 text-sm font-medium">
-                    ≈ {estimatedShares.toFixed(4)} {tradeType === 'option' ? 'contracts' : 'shares'}
-                  </span>
+                    <span className="text-gray-500 text-[13px]">≈ 0.4213 shares</span>
                 </div>
 
                 <div className="h-px bg-gray-100 my-4" />
 
                 {/* Total Cost */}
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">Estimated {activeTab === 'buy' ? 'cost' : 'credit'}</span>
-                  <span className={`font-bold ${!canAfford && activeTab === 'buy' ? 'text-red-600' : 'text-gray-900'}`}>
-                    {formatPrice(estimatedCost)} USD
-                  </span>
+                    <span className="font-medium text-black text-[15px]">Estimated cost</span>
+                    <span className="font-medium text-black text-[15px]">$ {amount || '0.00'} USD</span>
                 </div>
 
                 {!canAfford && activeTab === 'buy' && (

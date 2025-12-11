@@ -66,7 +66,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] text-[#212121] pb-20 relative overflow-hidden">
       <Snowflakes />
       <PaperTradingOnboarding 
         isOpen={showOnboarding} 

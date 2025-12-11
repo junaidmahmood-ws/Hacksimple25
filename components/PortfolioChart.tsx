@@ -13,23 +13,32 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ data }) => {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#15803d" stopOpacity={0.2}/>
-              <stop offset="95%" stopColor="#15803d" stopOpacity={0}/>
+              <stop offset="5%" stopColor="#0a8a58" stopOpacity={0.15}/>
+              <stop offset="95%" stopColor="#0a8a58" stopOpacity={0}/>
             </linearGradient>
           </defs>
           <Tooltip 
-            contentStyle={{ backgroundColor: '#064e3b', color: '#fff', borderRadius: '12px', border: '1px solid #065f46', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+            contentStyle={{ 
+              backgroundColor: '#212121', 
+              color: '#fff', 
+              borderRadius: '12px', 
+              border: 'none', 
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              padding: '10px 14px',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
             itemStyle={{ color: '#fff' }}
             formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
             labelStyle={{ display: 'none' }}
-            cursor={{ stroke: '#15803d', strokeWidth: 1, strokeDasharray: '4 4' }}
+            cursor={{ stroke: '#0a8a58', strokeWidth: 1, strokeDasharray: '4 4' }}
           />
           <YAxis domain={['dataMin', 'dataMax']} hide />
           <Area 
             type="monotone" 
             dataKey="value" 
-            stroke="#15803d" 
-            strokeWidth={3} 
+            stroke="#0a8a58" 
+            strokeWidth={2.5} 
             fillOpacity={1} 
             fill="url(#colorValue)" 
           />
